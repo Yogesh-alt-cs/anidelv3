@@ -35,7 +35,10 @@ const SearchResult = () => {
       </Helmet>
       {pages && !isLoading ? (
         <InfiniteScroll
-          dataLength={data?.pages.flat().length || 0}
+          dataLength={
+            pages?.reduce((acc, page) => acc + page.data.data.length, 0) || 0
+          }
+
           next={fetchNextPage}
           hasMore={hasNextPage}
           loader={<Loader className="h-fit" />}
@@ -45,13 +48,14 @@ const SearchResult = () => {
           <div className="flex flex-wrap justify-around items-center">
             {pages?.map((page, pageIndex) => (
               <React.Fragment key={pageIndex}>
-                {page.data.response.map((item, index) => (
-                  <div key={item.id + index} className="flw-item">
+                {page.data.data.map((item, index) => (
+                  <div key={item.mal_id + index} className="flw-item">
                     <Image data={item} />
                   </div>
                 ))}
               </React.Fragment>
             ))}
+
           </div>
         </InfiniteScroll>
       ) : (
