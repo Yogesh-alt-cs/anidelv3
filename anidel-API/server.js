@@ -1,38 +1,32 @@
-import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
-import cors from 'cors'
-import fetch from 'node-fetch'
-import { Redis } from '@upstash/redis'
+import { Hono } from "hono";
+import { serve } from "@hono/node-server";
+import { cors } from "hono/cors";
 
-const app = new Hono()
+const app = new Hono();
 
-// CORS middleware
-app.use('*', cors({ origin: '*' }))
+// Enable CORS
+app.use("*", cors());
 
-// Optional Redis cache
-let redis
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-    redis = new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN
-    })
-}
+// Health check
+app.get("/", (c) => c.text("Anidel API v1 running"));
 
-// Route example
-app.get('/api/search', async (c) => {
-    const q = c.req.query('q')
-    const url = `https://hianime.do/search?keyword=${encodeURIComponent(q)}`
-    const res = await fetch(url)
-    const text = await res.text()
+// Search using Jikan
+app.get("/api/search", async (c) => {
+    const q = c.req.query("q");
+    if (!q) return c.json({ error: "Missing query" }, 400);
 
-    // Optionally cache response
-    if (redis) {
-        await redis.set(`search:${q}`, text, { ex: 3600 })
+    try {
+        const url = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=10`;
+        const res = await fetch(url);
+        const data = await res.json();
+        return c.json(data);
+    } catch (err) {
+        return c.json({ error: "Failed to fetch from Jikan" }, 500);
     }
+});
 
-    return c.text(text)
-})
+// IMPORTANT FIX FOR RENDER
+const port = process.env.PORT || 3000;
+serve({ fetch: app.fetch, port });
 
-// Add other routes like /api/details/:id etc.
-
-serve(app, { port: process.env.PORT || 3000 })
+console.log("Server running on port", port);
