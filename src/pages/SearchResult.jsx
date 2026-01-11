@@ -13,7 +13,8 @@ const SearchResult = () => {
   const [searchParams] = useSearchParams();
   const keyword = searchParams.get("keyword");
   const { data, isLoading, isError, hasNextPage, fetchNextPage } =
-    useInfiniteApi(`/search?keyword=${keyword}&page=`);
+    useInfiniteApi(`/api/search?q=${keyword}&page=`);
+
 
   if (isError) {
     return (

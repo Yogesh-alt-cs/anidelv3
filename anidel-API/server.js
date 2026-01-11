@@ -9,6 +9,9 @@ app.use("*", cors());
 
 // Health check
 app.get("/", (c) => c.text("Anidel API v1 running"));
+app.get("/home", (c) => {
+    return c.json({ message: "Home OK" });
+});
 
 // Search using Jikan
 app.get("/api/search", async (c) => {
